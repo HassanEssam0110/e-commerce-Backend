@@ -11,6 +11,11 @@ const globalError = require('./middlewares/errorMiddlewares');
 const dbConnection = require('./config/database');
 //Routes
 const mountRotes = require('./routes');
+const { webhockCheckout } = require('./controllers/orderController')
+
+
+// Datebase connect
+dbConnection();
 
 //configuration dotenv
 dotenv.config({ path: "config.env" });
@@ -22,8 +27,8 @@ app.options('*', cors()); // include before other routes
 
 app.use(compression());// compress all responses
 
-// Datebase connect
-dbConnection();
+// checkout webhook MW
+app.post('/webhock-checkout', express.raw({ type: 'application/json' }), webhockCheckout)
 
 //Middlewares
 app.use(express.json());   //==>MW parsing
@@ -35,13 +40,12 @@ if (process.env.NODE_ENV === 'development') {
     //MW Logging
     app.use(morgan('dev'));
     console.log(`MODE: ${process.env.NODE_ENV}`)
-}
-
-if (process.env.NODE_ENV === 'production') {
+} else {
     //MW Logging
-    app.use(morgan('dev'));
+    app.use(morgan('combined'));
     console.log(`MODE: ${process.env.NODE_ENV}`)
 }
+
 
 //Mount Routes
 mountRotes(app)
@@ -49,7 +53,7 @@ mountRotes(app)
 
 
 app.get('/', (req, res) => {
-    res.send("Hello world")
+    res.send("Hi,API Running...")
 })
 
 
