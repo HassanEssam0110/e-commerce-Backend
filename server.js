@@ -40,7 +40,8 @@ if (process.env.NODE_ENV === 'development') {
     //MW Logging
     app.use(morgan('dev'));
     console.log(`MODE: ${process.env.NODE_ENV}`)
-} else {
+}
+if (process.env.NODE_ENV === 'production') {
     //MW Logging
     app.use(morgan('combined'));
     console.log(`MODE: ${process.env.NODE_ENV}`)
