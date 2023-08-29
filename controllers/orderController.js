@@ -7,9 +7,11 @@ const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/ApiError');
 
 const factory = require('./handlersFactory')
-const cartModel = require('../models/cartModel');
+
+const userModel = require('../models/userModel');
 const productModel = require('../models/productModel');
 const orderModel = require('../models/orderModel');
+const cartModel = require('../models/cartModel');
 
 
 // make filter MW 
@@ -179,6 +181,42 @@ exports.checkoutSession = asyncHandler(async (req, res, next) => {
 });
 
 
+const createCardOrder = async (sessionObj) => {
+    const cartId = sessionObj.client_reference_id;
+    const shippingAddress = sessionObj.metadata;
+    const orderPrice = sessionObj.amount_total / 100;
+
+    const cart = await cartModel.findById(cartId);
+    const user = await userModel.findOne({ email: sessionObj.customer_email });
+
+    // 1) create order with payment method type card
+    const order = await orderModel.create({
+        user: user._id,
+        cartItems: cart.cartitems,
+        shippingAddress: shippingAddress,
+        totalOrderPrice: orderPrice,
+        isPaid: true,
+        paidAt: Date.now(),
+        paymentMethodType: 'card',
+    });
+
+    // 2) After createing order, decrement product quantity,increment product sold
+    if (order) {
+        const bulkOption = cart.cartItems.map((item) => ({
+            updateOne: {
+                filter: { _id: item.product },
+                update: { $inc: { quantity: -item.quantity, sold: +item.quantity } }
+            },
+        }));
+
+        await productModel.bulkWrite(bulkOption, {}) // bulkWrite to make multi operations to the MongoDB server in one command.
+
+        // 3) Clear cart depend on cartid
+        await cartModel.findByIdAndDelete(cartId);
+    }
+}
+
+
 
 exports.webhockCheckout = asyncHandler(async (req, res, next) => {
     const sig = req.headers['stripe-signature'];
@@ -192,7 +230,9 @@ exports.webhockCheckout = asyncHandler(async (req, res, next) => {
     }
 
     if (event.type === 'checkout.session.completed') {
-        console.log('Create Order HERE');
-        console.log()
+        //Create Order 
+        createCardOrder(event.data.object)
     }
+
+    res.status(200).json({ received: true })
 })
