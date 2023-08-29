@@ -192,7 +192,7 @@ const createCardOrder = async (sessionObj) => {
     // 1) create order with payment method type card
     const order = await orderModel.create({
         user: user._id,
-        cartItems: cart.cartitems,
+        cartItems: cart.cartItems,
         shippingAddress: shippingAddress,
         totalOrderPrice: orderPrice,
         isPaid: true,
@@ -206,7 +206,7 @@ const createCardOrder = async (sessionObj) => {
             updateOne: {
                 filter: { _id: item.product },
                 update: { $inc: { quantity: -item.quantity, sold: +item.quantity } }
-            },
+            }
         }));
 
         await productModel.bulkWrite(bulkOption, {}) // bulkWrite to make multi operations to the MongoDB server in one command.
@@ -217,7 +217,9 @@ const createCardOrder = async (sessionObj) => {
 }
 
 
-
+//@desc      This webhook will run when stripe payment success paid
+//@route     POST  /webhock-checkout
+// @access   Private/Protect/user
 exports.webhockCheckout = asyncHandler(async (req, res, next) => {
     const sig = req.headers['stripe-signature'];
 

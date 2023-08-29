@@ -52,7 +52,7 @@ mountRotes(app)
 
 
 app.get('/', (req, res) => {
-    res.send("Hi,API Running...")
+    res.send("Hi, API Running...")
 })
 
 
