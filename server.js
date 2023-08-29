@@ -37,6 +37,12 @@ if (process.env.NODE_ENV === 'development') {
     console.log(`MODE: ${process.env.NODE_ENV}`)
 }
 
+if (process.env.NODE_ENV === 'production') {
+    //MW Logging
+    app.use(morgan('dev'));
+    console.log(`MODE: ${process.env.NODE_ENV}`)
+}
+
 //Mount Routes
 mountRotes(app)
 
