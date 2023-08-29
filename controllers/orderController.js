@@ -191,7 +191,7 @@ exports.webhockCheckout = asyncHandler(async (req, res, next) => {
         return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    if (event.tupe === 'checkout.session.completed') {
+    if (event.type === 'checkout.session.completed') {
         console.log('Create Order HERE');
         console.log()
     }
